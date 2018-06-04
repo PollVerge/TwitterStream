@@ -1,0 +1,9 @@
+.idea/
+.DS_Store
+.pyc
+.vscode
+private.py
+__pycache__
+stream.db
+tweets.csv
+tweets.db
