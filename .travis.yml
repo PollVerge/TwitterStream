@@ -1,5 +1,7 @@
 language: python
 install: pip install -r requirements.txt
+env:
+  - PYTHONPATH="/home/travis/build/ltcarbonell/TwitterStream"
 python:
   - "3.6"
 script:

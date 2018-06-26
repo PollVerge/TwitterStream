@@ -1,10 +1,19 @@
+#!/usr/bin/python3
+
 import settings
-import tweepy
-import dataset
-from datafreeze import freeze
-from textblob import TextBlob
+from bson.json_util import dumps
+import pymongo
 
-db = dataset.connect(settings.CONNECTION_STRING)
 
-result = db[settings.TABLE_NAME].all()
-freeze(result, format='csv', filename=settings.CSV_NAME)
+def main():
+    client = pymongo.MongoClient(settings.CONNECTION_STRING)
+    db = client.candidate
+    collection = getattr(db, settings.TABLE_NAME)
+    cursor = collection.find()
+
+    with open(settings.JSON_NAME, 'w') as jsonfile:
+        jsonfile.write(dumps(cursor))
+
+
+if __name__ == '__main__':
+    main()

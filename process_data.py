@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import pandas as pd
 import numpy as np
@@ -44,19 +44,26 @@ def get_approval_percentages(approval):
         'disapprove': 0,
     }
     for approval_type in approval:
-        approval_percentage[approval_type] = approval[approval_type]/total_reviews
+        approval_percentage[approval_type] = approval[approval_type] / total_reviews
 
     return approval_percentage
 
 
-tweets = pd.read_csv("tweets.csv")
-tweets["candidates"] = tweets.apply(get_candidates, axis=1)
+def main():
+    tweets = pd.read_json("tweets.json")
+    tweets["candidates"] = tweets.apply(get_candidates, axis=1)
 
-counts = tweets["candidates"].value_counts()
+    counts = tweets["candidates"].value_counts()
 
-gr = tweets.groupby("candidates").agg(get_approval)
+    gr = tweets.groupby("candidates").agg(get_approval)
 
-gr["rating"] = gr["polarity"].apply(get_approval_percentages)
-for candidate_rating in gr["rating"].items():
-    print(candidate_rating[0], 'approve:', candidate_rating[1]
-          ['approve'], 'disapprove:', candidate_rating[1]['disapprove'])
+    gr["rating"] = gr["polarity"].apply(get_approval_percentages)
+    for candidate_rating in gr["rating"].items():
+        print(candidate_rating[0], 'approve:', candidate_rating[1]
+              ['approve'], 'disapprove:', candidate_rating[1]['disapprove'])
+
+    print(counts)
+
+
+if __name__ == '__main__':
+    main()
