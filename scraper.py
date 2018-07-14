@@ -1,11 +1,13 @@
+#!/usr/bin/python3
+
 import settings
 import tweepy
-import dataset
+import pymongo
 from textblob import TextBlob
-from sqlalchemy.exc import ProgrammingError
 import json
 
-db = dataset.connect(settings.CONNECTION_STRING)
+client = pymongo.MongoClient(settings.CONNECTION_STRING)
+db = client.candidate
 
 
 class StreamListener(tweepy.StreamListener):
@@ -43,7 +45,7 @@ class StreamListener(tweepy.StreamListener):
 
         table = db[settings.TABLE_NAME]
         try:
-            table.insert(dict(
+            table.insert_one(dict(
                 user_description=description,
                 user_location=loc,
                 coordinates=coords,
@@ -59,7 +61,7 @@ class StreamListener(tweepy.StreamListener):
                 polarity=sent.polarity,
                 subjectivity=sent.subjectivity,
             ))
-        except ProgrammingError as err:
+        except pymongo.errors.PyMongoError as err:
             print(err)
 
     def on_error(self, status_code):
@@ -68,12 +70,17 @@ class StreamListener(tweepy.StreamListener):
             return False
 
 
-auth = tweepy.OAuthHandler(settings.TWITTER_APP_KEY,
-                           settings.TWITTER_APP_SECRET)
-auth.set_access_token(settings.TWITTER_KEY, settings.TWITTER_SECRET)
-api = tweepy.API(auth)
+def main():
+    auth = tweepy.OAuthHandler(settings.TWITTER_APP_KEY,
+                               settings.TWITTER_APP_SECRET)
+    auth.set_access_token(settings.TWITTER_KEY, settings.TWITTER_SECRET)
+    api = tweepy.API(auth)
 
-stream_listener = StreamListener()
-stream = tweepy.Stream(
-    auth=api.auth, listener=stream_listener, tweet_mode='extended')
-stream.filter(track=settings.TRACK_TERMS)
+    stream_listener = StreamListener()
+    stream = tweepy.Stream(
+        auth=api.auth, listener=stream_listener, tweet_mode='extended')
+    stream.filter(track=settings.TRACK_TERMS)
+
+
+if __name__ == '__main__':
+    main()
