@@ -8,7 +8,7 @@ import pymongo
 def main():
     client = pymongo.MongoClient(settings.CONNECTION_STRING)
     db = client.candidate
-    collection = getattr(db, settings.TABLE_NAME)
+    collection = getattr(db, settings.RAW_TABLE_NAME)
     cursor = collection.find()
 
     with open(settings.JSON_NAME, 'w') as jsonfile:

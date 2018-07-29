@@ -26,7 +26,10 @@ class StreamListener(tweepy.StreamListener):
         description = status.user.description
         loc = status.user.location
         coords = status.coordinates
-        geo = status.geo
+        try:
+            place = status.place
+        except AttributeError:
+            place = None
         name = status.user.screen_name
         user_created = status.user.created_at
         followers = status.user.followers_count
@@ -37,20 +40,23 @@ class StreamListener(tweepy.StreamListener):
         blob = TextBlob(text)
         sent = blob.sentiment
 
-        if geo is not None:
-            geo = json.dumps(geo)
-
         if coords is not None:
             coords = json.dumps(coords)
 
-        table = db[settings.TABLE_NAME]
+        if place is not None:
+            place = json.dumps({
+                'full_name': place.full_name,
+                'country_code': place.country_code,
+            })
+
+        table = db[settings.RAW_TABLE_NAME]
         try:
             table.insert_one(dict(
                 user_description=description,
                 user_location=loc,
                 coordinates=coords,
                 text=text,
-                geo=geo,
+                place=place,
                 user_name=name,
                 user_created=user_created,
                 user_followers=followers,
