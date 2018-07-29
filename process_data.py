@@ -2,6 +2,12 @@
 
 import pandas as pd
 import numpy as np
+import pymongo
+import datetime
+import settings
+
+client = pymongo.MongoClient(settings.CONNECTION_STRING)
+db = client.candidate
 
 
 def get_candidates(row):
@@ -27,9 +33,9 @@ def get_approval(column):
         'disapprove': 0,
     }
     for row in column:
-        if row > 0.01:
+        if row > 0:
             results['approve'] += 1
-        if 0.01 >= row and row >= -0.01:
+        if row == 0:
             results['neutral'] += 1
         else:
             results['disapprove'] += 1
@@ -49,6 +55,22 @@ def get_approval_percentages(approval):
     return approval_percentage
 
 
+def add_ratings_to_mongo(ratings, counts):
+    table = db[settings.PROCESSED_TABLE_NAME]
+
+    for candidate_rating in ratings.items():
+        try:
+            record = {
+                'candidate': candidate_rating[0],
+                'created_at': datetime.datetime.utcnow(),
+                'count': int(getattr(counts, candidate_rating[0], None))
+            }
+            record.update(candidate_rating[1])
+            table.insert_one(record)
+        except pymongo.errors.PyMongoError as err:
+            print(err)
+
+
 def main():
     tweets = pd.read_json("tweets.json")
     tweets["candidates"] = tweets.apply(get_candidates, axis=1)
@@ -58,11 +80,8 @@ def main():
     gr = tweets.groupby("candidates").agg(get_approval)
 
     gr["rating"] = gr["polarity"].apply(get_approval_percentages)
-    for candidate_rating in gr["rating"].items():
-        print(candidate_rating[0], 'approve:', candidate_rating[1]
-              ['approve'], 'disapprove:', candidate_rating[1]['disapprove'])
 
-    print(counts)
+    add_ratings_to_mongo(ratings=gr["rating"], counts=counts)
 
 
 if __name__ == '__main__':
