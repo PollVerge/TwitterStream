@@ -9,6 +9,8 @@ import settings
 client = pymongo.MongoClient(settings.CONNECTION_STRING)
 db = client.candidate
 
+rollup_time = datetime.datetime.utcnow()
+
 
 def get_candidates(row):
     candidates = []
@@ -62,7 +64,7 @@ def add_ratings_to_mongo(ratings, counts):
         try:
             record = {
                 'candidate': candidate_rating[0],
-                'created_at': datetime.datetime.utcnow(),
+                'created_at': rollup_time,
                 'count': int(getattr(counts, candidate_rating[0], None))
             }
             record.update(candidate_rating[1])
@@ -72,7 +74,11 @@ def add_ratings_to_mongo(ratings, counts):
 
 
 def main():
-    tweets = pd.read_json("tweets.json")
+    rollup_coll = getattr(db, settings.ROLLUP_TABLE_NAME)
+    tweets = pd.DataFrame(
+        list(rollup_coll.find({'created': {'$lt': rollup_time}}))
+    )
+
     tweets["candidates"] = tweets.apply(get_candidates, axis=1)
 
     counts = tweets["candidates"].value_counts()
@@ -82,6 +88,7 @@ def main():
     gr["rating"] = gr["polarity"].apply(get_approval_percentages)
 
     add_ratings_to_mongo(ratings=gr["rating"], counts=counts)
+    rollup_coll.delete_many({'created': {'$lt': rollup_time}})
 
 
 if __name__ == '__main__':
