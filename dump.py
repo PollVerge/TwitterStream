@@ -1,18 +1,26 @@
 #!/usr/bin/python3
 
 import settings
-from bson.json_util import dumps
 import pymongo
+import datetime
+
+
+client = pymongo.MongoClient(settings.CONNECTION_STRING)
+db = client.candidate
+
+
+def rollup_raw_data():
+    raw_coll = getattr(db, settings.RAW_TABLE_NAME)
+    rollup_coll = getattr(db, settings.ROLLUP_TABLE_NAME)
+
+    for doc in raw_coll.find({'created': {'$lt': datetime.datetime.utcnow()}}):
+        rollup_coll.insert_one(doc)
+
+    raw_coll.delete_many({'created': {'$lt': datetime.datetime.utcnow()}})
 
 
 def main():
-    client = pymongo.MongoClient(settings.CONNECTION_STRING)
-    db = client.candidate
-    collection = getattr(db, settings.RAW_TABLE_NAME)
-    cursor = collection.find()
-
-    with open(settings.JSON_NAME, 'w') as jsonfile:
-        jsonfile.write(dumps(cursor))
+    rollup_raw_data()
 
 
 if __name__ == '__main__':
