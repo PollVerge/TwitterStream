@@ -12,8 +12,8 @@ rollup_time = datetime.datetime.utcnow()
 
 
 def rollup_raw_data():
-    raw_coll = getattr(db, settings.RAW_TABLE_NAME)
-    rollup_coll = getattr(db, settings.ROLLUP_TABLE_NAME)
+    raw_coll = getattr(db, settings.RAW_COLLECTION_NAME)
+    rollup_coll = getattr(db, settings.ROLLUP_COLLECTION_NAME)
 
     for doc in raw_coll.find({'created': {'$lt': rollup_time}}):
         rollup_coll.insert_one(doc)

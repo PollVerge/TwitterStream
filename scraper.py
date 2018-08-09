@@ -15,12 +15,12 @@ class StreamListener(tweepy.StreamListener):
     def on_status(self, status):
         if hasattr(status, 'retweeted_status'):
             try:
-                text = status.retweeted_status.extended_tweet["full_text"]
+                text = status.retweeted_status.extended_tweet['full_text']
             except AttributeError:
                 text = status.retweeted_status.text
         else:
             try:
-                text = status.extended_tweet["full_text"]
+                text = status.extended_tweet['full_text']
             except AttributeError:
                 text = status.text
         description = status.user.description
@@ -49,9 +49,9 @@ class StreamListener(tweepy.StreamListener):
                 'country_code': place.country_code,
             })
 
-        table = db[settings.RAW_TABLE_NAME]
+        collection = db[settings.RAW_COLLECTION_NAME]
         try:
-            table.insert_one(dict(
+            collection.insert_one(dict(
                 user_description=description,
                 user_location=loc,
                 coordinates=coords,
@@ -77,15 +77,19 @@ class StreamListener(tweepy.StreamListener):
 
 
 def main():
-    auth = tweepy.OAuthHandler(settings.TWITTER_APP_KEY,
-                               settings.TWITTER_APP_SECRET)
+    auth = tweepy.OAuthHandler(settings.TWITTER_APP_KEY, settings.TWITTER_APP_SECRET)
     auth.set_access_token(settings.TWITTER_KEY, settings.TWITTER_SECRET)
     api = tweepy.API(auth)
 
+    track_terms = []
+    collection = db[settings.TRACK_COLLECTION_NAME]
+    for record in collection.find():
+        terms = record['track_terms']
+        track_terms = track_terms + terms
+
     stream_listener = StreamListener()
-    stream = tweepy.Stream(
-        auth=api.auth, listener=stream_listener, tweet_mode='extended')
-    stream.filter(track=settings.TRACK_TERMS)
+    stream = tweepy.Stream(auth=api.auth, listener=stream_listener, tweet_mode='extended')
+    stream.filter(track=track_terms)
 
 
 if __name__ == '__main__':
