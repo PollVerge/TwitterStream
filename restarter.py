@@ -14,7 +14,7 @@ def main():
     tmp = subprocess.getoutput('ps -Af')
 
     if process_name not in tmp[:]:
-        print('The process is not running. Let's restart.')
+        print('The process is not running. Let\'s restart.')
         subprocess.Popen(['python3', process_name, '&'], shell=False)
     else:
         print('The process is running.')
