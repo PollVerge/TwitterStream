@@ -1,8 +1,9 @@
-tweepy==3.6.0
-numpy
-pandas
-textblob
-datafreeze
+tweepy>=3.6.0
+numpy>=1.14.3
+pandas>=0.23.0
+textblob>=0.15.1
+codecov>=2.0.15
+pymongo>=3.6.1
 pytest-cov
-codecov
-pymongo
+mock>=2.0.0
+python-dotenv>=0.9.1

@@ -7,9 +7,7 @@ Run this in a cron job
 import subprocess
 
 
-def main():
-    # change this to the name of your process
-    process_name = '/code/TwitterStream/scraper.py'
+def main(process_name):
 
     tmp = subprocess.getoutput('ps -Af')
 
@@ -21,4 +19,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    process_name = '/code/TwitterStream/scraper.py'
+    main(process_name=process_name)
