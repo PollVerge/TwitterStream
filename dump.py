@@ -15,9 +15,7 @@ def rollup_raw_data():
     raw_coll = getattr(db, settings.RAW_COLLECTION_NAME)
     rollup_coll = getattr(db, settings.ROLLUP_COLLECTION_NAME)
 
-    for doc in raw_coll.find({'created': {'$lt': rollup_time}}):
-        rollup_coll.insert_one(doc)
-
+    rollup_coll.insert_many(raw_coll.find({'created': {'$lt': rollup_time}}))
     raw_coll.delete_many({'created': {'$lt': rollup_time}})
 
 
